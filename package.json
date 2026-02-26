@@ -1,0 +1,16 @@
+{
+  "name": "aclient",
+  "version": "1.0.0",
+  "description": "Example client for connecting to OpenClaw Gateway",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "http": "node src/http-client.js",
+    "ws": "node src/ws-client.js"
+  },
+  "dependencies": {
+    "ws": "^8.19.0",
+    "dotenv": "^17.3.1"
+  }
+}
