@@ -545,11 +545,9 @@
       }
     }
 
-    function sendMessage(text, fileAttachment = null) {
-      let messageText = text;
-      if (fileAttachment) {
-        messageText = text ? `${text}\n\n[File: ${fileAttachment.originalName}](${fileAttachment.url})` : `[File: ${fileAttachment.originalName}](${fileAttachment.url})`;
-      }
+    function sendMessage(text, mediaPath = null) {
+      // Build attachments array if media path provided
+      const attachments = mediaPath ? [{ path: mediaPath }] : null;
       
       send({
         type: 'req',
@@ -557,7 +555,8 @@
         id: `req_${++requestId}_${Date.now()}`,
         params: {
           sessionKey,
-          message: messageText,
+          message: text || '',
+          attachments,
           idempotencyKey: `idem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         },
       });
@@ -597,7 +596,7 @@
       formData.append('file', file);
       
       try {
-        const response = await fetch(`${CONFIG.apiUrl}/api/upload`, {
+        const response = await fetch(`${CONFIG.apiUrl}/api/media/upload`, {
           method: 'POST',
           body: formData
         });
@@ -757,14 +756,15 @@
       if (!text && !selectedFile) return;
       
       // Upload file first if selected
-      let fileAttachment = null;
+      let mediaPath = null;
       if (selectedFile) {
         sendBtn.disabled = true;
         sendBtn.textContent = 'Uploading...';
         
         try {
           const result = await uploadFile(selectedFile);
-          fileAttachment = result.file;
+          // Get MEDIA: path from response
+          mediaPath = result.files?.[0]?.path;
         } catch (err) {
           alert('File upload failed. Please try again.');
           sendBtn.disabled = false;
@@ -773,11 +773,12 @@
         }
       }
       
-      // Add message to chat
-      addMessage(text || (fileAttachment ? `Sent file: ${fileAttachment.originalName}` : ''), 'user', fileAttachment);
+      // Add message to chat (show file name if uploaded)
+      const displayText = text || (mediaPath ? `Sent file: ${selectedFile?.name || 'attachment'}` : '');
+      addMessage(displayText, 'user');
       
-      // Send to agent
-      sendMessage(text, fileAttachment);
+      // Send to agent with MEDIA: attachment
+      sendMessage(text, mediaPath);
       
       // Clear input and file
       messageInput.value = '';

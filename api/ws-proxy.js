@@ -596,7 +596,25 @@ async function getUserId(username) {
 }
 
 
-// File upload endpoint
+// File upload endpoint - returns MEDIA: path for Gateway
+app.post('/api/media/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  
+  // Return format expected by Gateway
+  const mediaPath = `MEDIA:/${req.file.filename}`;
+  res.json({
+    files: [{
+      path: mediaPath,
+      name: req.file.originalname,
+      mime: req.file.mimetype,
+      size: req.file.size
+    }]
+  });
+});
+
+// Legacy upload endpoint (kept for compatibility)
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
