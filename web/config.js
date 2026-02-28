@@ -1,8 +1,8 @@
 // Frontend Configuration
 
 const CONFIG = {
-  // WebSocket Proxy URL - use relative path
-  wsUrl: 'ws://192.168.99.211:8084/',
+  // WebSocket Proxy URL - dynamically use current host
+  wsUrl: (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.hostname + ':8084/',
   
   // Proxy token (for token-based auth)
   proxyToken: 'change-me-in-production',
