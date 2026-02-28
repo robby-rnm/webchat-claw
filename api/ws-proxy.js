@@ -362,8 +362,107 @@ wss.on('connection', async (ws, req) => {
             // Save message to database (fire and forget)
             if (msg.method === 'chat.send' && msg.params.content) {
               getUserId(clientUsername).then(userId => {
-                saveMessage(userId, clientUsername || 'anonymous', msg.params.content, sessionKey);
+            
+            // Handle typing event
+            if (msg.method === 'typing') {
+              const username = msg.params?.username || clientUsername || 'Someone';
+              const isTyping = msg.params?.typing !== false;
+              
+              // Broadcast to all clients in the same session
+              activeConnections.forEach((conn) => {
+                if (conn.sessionKey === sessionKey && conn.gatewayWs?.readyState === 1) {
+                  conn.gatewayWs.send(JSON.stringify({
+                    type: 'event',
+                    event: 'typing',
+                    payload: { username, typing: isTyping }
+                  }));
+                }
               });
+              
+              // Auto-clear typing after 3 seconds
+              if (isTyping) {
+                setTimeout(() => {
+                  activeConnections.forEach((conn) => {
+                    if (conn.sessionKey === sessionKey && conn.gatewayWs?.readyState === 1) {
+                      conn.gatewayWs.send(JSON.stringify({
+                        type: 'event',
+                        event: 'typing',
+                        payload: { username, typing: false }
+                      }));
+                    }
+                  });
+                }, 3000);
+              }
+              return;
+            }
+                saveMessage(userId, clientUsername || 'anonymous', msg.params.content, sessionKey);
+            
+            // Handle typing event
+            if (msg.method === 'typing') {
+              const username = msg.params?.username || clientUsername || 'Someone';
+              const isTyping = msg.params?.typing !== false;
+              
+              // Broadcast to all clients in the same session
+              activeConnections.forEach((conn) => {
+                if (conn.sessionKey === sessionKey && conn.gatewayWs?.readyState === 1) {
+                  conn.gatewayWs.send(JSON.stringify({
+                    type: 'event',
+                    event: 'typing',
+                    payload: { username, typing: isTyping }
+                  }));
+                }
+              });
+              
+              // Auto-clear typing after 3 seconds
+              if (isTyping) {
+                setTimeout(() => {
+                  activeConnections.forEach((conn) => {
+                    if (conn.sessionKey === sessionKey && conn.gatewayWs?.readyState === 1) {
+                      conn.gatewayWs.send(JSON.stringify({
+                        type: 'event',
+                        event: 'typing',
+                        payload: { username, typing: false }
+                      }));
+                    }
+                  });
+                }, 3000);
+              }
+              return;
+            }
+              });
+            
+            // Handle typing event
+            if (msg.method === 'typing') {
+              const username = msg.params?.username || clientUsername || 'Someone';
+              const isTyping = msg.params?.typing !== false;
+              
+              // Broadcast to all clients in the same session
+              activeConnections.forEach((conn) => {
+                if (conn.sessionKey === sessionKey && conn.gatewayWs?.readyState === 1) {
+                  conn.gatewayWs.send(JSON.stringify({
+                    type: 'event',
+                    event: 'typing',
+                    payload: { username, typing: isTyping }
+                  }));
+                }
+              });
+              
+              // Auto-clear typing after 3 seconds
+              if (isTyping) {
+                setTimeout(() => {
+                  activeConnections.forEach((conn) => {
+                    if (conn.sessionKey === sessionKey && conn.gatewayWs?.readyState === 1) {
+                      conn.gatewayWs.send(JSON.stringify({
+                        type: 'event',
+                        event: 'typing',
+                        payload: { username, typing: false }
+                      }));
+                    }
+                  });
+                }, 3000);
+              }
+              return;
+            }
             }
           }
           

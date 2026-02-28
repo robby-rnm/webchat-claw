@@ -788,6 +788,14 @@
 
     let typingTimeout = null;
     messageInput.addEventListener('input', () => {
+      // Send typing event
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'req',
+          method: 'typing',
+          params: { username: currentUsername || 'Guest', typing: true }
+        }));
+      }
       // Send typing event when user types
       if (ws && ws.readyState === WebSocket.OPEN && sessionKey) {
         send({

@@ -3,11 +3,11 @@
 
 const CONFIG = {
   // WebSocket Proxy URL
-  wsUrl: 'ws://192.168.99.211:8084/',
+  wsUrl: 'ws://localhost:8084/',
   
   // Proxy token (for token-based auth)
   proxyToken: 'change-me-in-production',
   
   // API Server URL (for file uploads)
-  apiUrl: 'http://192.168.99.211:8084',
+  apiUrl: 'http://localhost:8084',
 };
