@@ -5,12 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AClaw - Chat</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #1a1a2e;
@@ -19,7 +14,6 @@
       display: flex;
       flex-direction: column;
     }
-
     .header {
       background: #16213e;
       padding: 15px 20px;
@@ -28,29 +22,15 @@
       align-items: center;
       justify-content: space-between;
     }
-
-    .header h1 {
-      font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
+    .header h1 { font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
     .status {
       font-size: 0.8rem;
       padding: 5px 12px;
       border-radius: 20px;
       background: #0f3460;
     }
-
-    .status.connected {
-      background: #28a745;
-    }
-
-    .status.disconnected {
-      background: #dc3545;
-    }
-
+    .status.connected { background: #28a745; }
+    .status.disconnected { background: #dc3545; }
     .chat-container {
       flex: 1;
       overflow-y: auto;
@@ -59,30 +39,15 @@
       flex-direction: column;
       gap: 15px;
     }
-
     .message {
       max-width: 70%;
       padding: 12px 16px;
       border-radius: 12px;
       line-height: 1.5;
     }
-
-    .message.user {
-      align-self: flex-end;
-      background: #0f3460;
-    }
-
-    .message.agent {
-      align-self: flex-start;
-      background: #16213e;
-    }
-
-    .message .sender {
-      font-size: 0.75rem;
-      color: #888;
-      margin-bottom: 5px;
-    }
-
+    .message.user { align-self: flex-end; background: #0f3460; }
+    .message.agent { align-self: flex-start; background: #16213e; }
+    .message .sender { font-size: 0.75rem; color: #888; margin-bottom: 5px; }
     .input-container {
       background: #16213e;
       padding: 15px 20px;
@@ -90,7 +55,6 @@
       display: flex;
       gap: 10px;
     }
-
     input {
       flex: 1;
       padding: 12px 16px;
@@ -101,11 +65,7 @@
       font-size: 1rem;
       outline: none;
     }
-
-    input:focus {
-      border-color: #e94560;
-    }
-
+    input:focus { border-color: #e94560; }
     button {
       padding: 12px 24px;
       background: #e94560;
@@ -116,66 +76,80 @@
       font-size: 1rem;
       transition: background 0.2s;
     }
-
-    button:hover {
-      background: #c73e54;
+    button:hover { background: #c73e54; }
+    button:disabled { background: #555; cursor: not-allowed; }
+    .typing { color: #888; font-style: italic; padding: 0 20px; font-size: 0.9rem; }
+    .login-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #1a1a2e;
     }
-
-    button:disabled {
-      background: #555;
-      cursor: not-allowed;
+    .login-box {
+      background: #16213e;
+      padding: 40px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
     }
-
-    .typing {
-      color: #888;
-      font-style: italic;
-      padding: 0 20px;
-      font-size: 0.9rem;
+    .login-box h2 { text-align: center; margin-bottom: 30px; }
+    .login-box input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: none;
+      background: #0f3460;
+      color: white;
     }
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      background: #e94560;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .login-error { color: #e94560; text-align: center; margin-top: 15px; display: none; }
   </style>
 </head>
 <body>
   <!-- Login Screen -->
-  <div id="login-screen" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #1a1a2e;">
-    <div style="background: #16213e; padding: 40px; border-radius: 12px; width: 100%; max-width: 400px;">
-      <h2 style="text-align: center; margin-bottom: 30px;">🐲 AClaw Login</h2>
-      <input type="text" id="login-username" placeholder="Username" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: none; background: #0f3460; color: white;">
-      <input type="password" id="login-password" placeholder="Password" style="width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: none; background: #0f3460; color: white;">
-      <button onclick="doLogin()" style="width: 100%; padding: 12px; background: #e94560; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem;">Login</button>
-      <p id="login-error" style="color: #e94560; text-align: center; margin-top: 15px; display: none;"></p>
+  <div id="login-screen" class="login-container">
+    <div class="login-box">
+      <h2>🐲 AClaw Login</h2>
+      <input type="text" id="login-username" placeholder="Username">
+      <input type="password" id="login-password" placeholder="Password">
+      <button onclick="doLogin()">Login</button>
+      <p id="login-error" class="login-error"></p>
     </div>
   </div>
 
-  <!-- Chat Screen (hidden by default) -->
+  <!-- Chat Screen -->
   <div id="chat-screen" style="display: none; height: 100vh; flex-direction: column;">
-  <div class="header">
-    <h1>🐲 AClaw Chat</h1>
-    <span id="status" class="status disconnected">Disconnected</span>
+    <div class="header">
+      <h1>🐲 AClaw Chat</h1>
+      <span id="status" class="status disconnected">Disconnected</span>
+    </div>
+    <div id="chat" class="chat-container"></div>
+    <div id="typing" class="typing" style="display: none;">Agent is typing...</div>
+    <div class="input-container">
+      <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
+      <button id="sendBtn">Send</button>
+    </div>
   </div>
 
-  <div id="chat" class="chat-container"></div>
-
-  <div id="typing" class="typing" style="display: none;">Agent is typing...</div>
-
-  <div class="input-container">
-    <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" />
-    <button id="sendBtn">Send</button>
-  </div>
-  </div> <!-- End chat-screen -->
-
+  <script src="config.js"></script>
   <script>
-    // Configuration - connect to WebSocket Proxy
-    const CONFIG = {
-      // WebSocket Proxy (port 8084)
-      wsUrl: 'ws://192.168.99.211:8084/',
-    };
-
-    // State - use fixed session key
+    // State
     let ws = null;
-    let sessionKey = 'aclient-web';
+    let sessionKey = '';
     let lastRunId = null;
     let requestId = 0;
-    let messageQueue = [];
     let isConnected = false;
     let isLoggedIn = false;
 
@@ -188,7 +162,7 @@
     const statusEl = document.getElementById('status');
     const typingEl = document.getElementById('typing');
 
-    // Login function
+    // ============ Login ============
     async function doLogin() {
       const username = document.getElementById('login-username').value;
       const password = document.getElementById('login-password').value;
@@ -200,35 +174,16 @@
         return;
       }
 
-      // Connect with login credentials
-      const wsUrl = CONFIG.wsUrl + '?user=' + encodeURIComponent(username) + '&pass=' + encodeURIComponent(password);
-
+      const wsUrl = `${CONFIG.wsUrl}?user=${encodeURIComponent(username)}&pass=${encodeURIComponent(password)}`;
       ws = new WebSocket(wsUrl);
 
-      ws.onopen = () => {
-        console.log('Connected for login');
-      };
+      ws.onmessage = (event) => handleData(event.data, handleLoginResponse);
 
-      ws.onmessage = (event) => {
-        // Handle Blob or string
-        const data = event.data;
-        if (data instanceof Blob) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            handleLoginResponse(reader.result);
-          };
-          reader.readAsText(data);
-        } else {
-          handleLoginResponse(data);
-        }
-      };
-
-      ws.onerror = (e) => {
+      ws.onerror = () => {
         errorEl.textContent = 'Connection error';
         errorEl.style.display = 'block';
       };
 
-      // Timeout for login
       setTimeout(() => {
         if (!isLoggedIn) {
           errorEl.textContent = 'Login timeout';
@@ -238,90 +193,115 @@
       }, 10000);
     }
 
-    function handleLoginResponse(data) {
-      try {
-        const msg = JSON.parse(data);
-
-        if (msg.type === 'res' && msg.ok) {
-          // Login successful - switch to chat mode
-          isLoggedIn = true;
-          loginScreen.style.display = 'none';
-          chatScreen.style.display = 'flex';
-          
-          // Set up chat message handlers on existing connection
-          setupChatHandlers();
-          
-          // Update status
-          setStatus(true);
-          console.log('Logged in, ready for chat');
-        } else if (msg.type === 'res') {
-          // Login failed
-          const errorEl = document.getElementById('login-error');
-          errorEl.textContent = msg.error?.message || 'Login failed';
-          errorEl.style.display = 'block';
-          if (ws) ws.close();
-          ws = null;
-        }
-      } catch (e) {
-        console.error('Login parse error:', e);
+    function handleLoginResponse(msg) {
+      if (msg.type === 'res' && msg.ok) {
+        isLoggedIn = true;
+        loginScreen.style.display = 'none';
+        chatScreen.style.display = 'flex';
+        setupChatHandlers();
+        setStatus(true);
+        console.log('Logged in, ready for chat');
+      } else if (msg.type === 'res') {
+        const errorEl = document.getElementById('login-error');
+        errorEl.textContent = msg.error?.message || 'Login failed';
+        errorEl.style.display = 'block';
+        if (ws) ws.close();
+        ws = null;
       }
     }
 
+    // ============ Chat Handlers ============
     function setupChatHandlers() {
-      // Override onmessage to handle chat messages
-      ws.onmessage = (event) => {
-        const data = event.data;
-        if (data instanceof Blob) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            console.log('📥 Received:', reader.result);
-            const msg = JSON.parse(reader.result);
-            // Extract session key from proxy-ready response
-            if (msg.payload?.sessionKey) {
-              sessionKey = msg.payload.sessionKey;
-              console.log('Session key updated:', sessionKey);
-            }
-            handleMessage(msg);
-          };
-          reader.readAsText(data);
-        } else {
-          console.log('📥 Received:', data);
-          handleMessage(JSON.parse(data));
+      ws.onmessage = (event) => handleData(event.data, (msg) => {
+        // Update session key
+        if (msg.payload?.sessionKey || msg.result?.sessionKey) {
+          sessionKey = msg.payload?.sessionKey || msg.result?.sessionKey;
         }
-      };
-      
-      ws.onclose = (e) => {
-        console.log('Disconnected:', e.code, e.reason);
+        handleMessage(msg);
+      });
+
+      ws.onclose = () => {
         setStatus(false);
         isLoggedIn = false;
         loginScreen.style.display = 'flex';
         chatScreen.style.display = 'none';
-        // Reconnect after 3 seconds
-        setTimeout(() => {
-          if (isLoggedIn) connect();
-        }, 3000);
-      };
-      
-      ws.onerror = (e) => {
-        console.log('WebSocket error');
+        setTimeout(() => { if (isLoggedIn) connect(); }, 3000);
       };
     }
 
-    function initChat() {
-      // Already connected from login, just set up handlers
-      setupChatHandlers();
+    function handleData(data, callback) {
+      if (data instanceof Blob) {
+        const reader = new FileReader();
+        reader.onload = () => callback(JSON.parse(reader.result));
+        reader.readAsText(data);
+      } else {
+        callback(JSON.parse(data));
+      }
     }
 
-    // Helper functions
-    function nextId() {
-      return `req_${++requestId}_${Date.now()}`;
+    // ============ WebSocket ============
+    function connect() {
+      if (ws && ws.readyState === WebSocket.OPEN) return;
+      ws = new WebSocket(`${CONFIG.wsUrl}?token=${CONFIG.proxyToken}`);
+
+      ws.onopen = () => setStatus(true);
+      ws.onmessage = (event) => handleData(event.data, handleMessage);
+      ws.onclose = () => { setStatus(false); setTimeout(connect, 3000); };
+      ws.onerror = (e) => console.error('WebSocket error:', e);
     }
 
-    function generateIdempotencyKey() {
-      return `idem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    function send(frame) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(frame));
+      }
     }
 
-    // UI Functions
+    function sendMessage(text) {
+      send({
+        type: 'req',
+        method: 'chat.send',
+        id: `req_${++requestId}_${Date.now()}`,
+        params: {
+          sessionKey,
+          message: text,
+          idempotencyKey: `idem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        },
+      });
+    }
+
+    // ============ Message Handling ============
+    function handleMessage(msg) {
+      // Connection established
+      if (msg.type === 'res' && msg.ok) {
+        if (msg.payload?.sessionKey || msg.result?.sessionKey) {
+          sessionKey = msg.payload?.sessionKey || msg.result?.sessionKey;
+        }
+        return;
+      }
+
+      // Agent/Chat events
+      if (msg.event === 'agent' || msg.event === 'chat') {
+        const p = msg.payload;
+
+        // Assistant stream
+        if (p.stream === 'assistant') {
+          const runId = p.runId;
+          const text = p.data?.text || p.data?.delta;
+          if (runId !== lastRunId && text) {
+            lastRunId = runId;
+            showTyping(false);
+            addMessage(text, 'agent');
+          }
+        }
+
+        // Typing indicator
+        if (p.stream === 'lifecycle') {
+          showTyping(p.data?.phase === 'start');
+        }
+      }
+    }
+
+    // ============ UI Functions ============
     function addMessage(text, sender) {
       const div = document.createElement('div');
       div.className = `message ${sender}`;
@@ -341,169 +321,6 @@
       typingEl.style.display = show ? 'block' : 'none';
     }
 
-    // WebSocket Functions
-    function connect() {
-      // If already connected (from login), don't reconnect
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        console.log('Already connected');
-        return;
-      }
-
-      console.log('Connecting to:', CONFIG.wsUrl);
-
-      // Auth via proxy token in query string
-      const wsUrl = CONFIG.wsUrl + '?token=' + encodeURIComponent(CONFIG.proxyToken);
-      console.log('Full URL:', wsUrl);
-
-      ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        console.log('Connected to proxy');
-        setStatus(true);
-        // Don't call sendConnect() - proxy already connected to Gateway
-        // Just wait for proxy ready message
-      };
-
-      ws.onmessage = (event) => {
-        // Handle Blob or string
-        const data = event.data;
-        if (data instanceof Blob) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            console.log('📥 Received:', reader.result);
-            const msg = JSON.parse(reader.result);
-            if (msg.payload?.sessionKey || msg.result?.sessionKey) {
-              sessionKey = msg.payload?.sessionKey || msg.result?.sessionKey;
-              console.log('Session key:', sessionKey);
-            }
-            handleMessage(JSON.parse(reader.result));
-          };
-          reader.readAsText(data);
-        } else {
-          console.log('📥 Received:', data);
-          const msg = JSON.parse(data);
-          if (msg.payload?.sessionKey || msg.result?.sessionKey) {
-            sessionKey = msg.payload?.sessionKey || msg.result?.sessionKey;
-            console.log('Session key:', sessionKey);
-          }
-          handleMessage(JSON.parse(data));
-        }
-      };
-
-      ws.onclose = (e) => {
-        console.log('Disconnected:', e.code, e.reason);
-        setStatus(false);
-        // Reconnect after 3 seconds
-        setTimeout(connect, 3000);
-      };
-
-      ws.onerror = (e) => {
-        console.error('WebSocket error:', e);
-      };
-    }
-
-    function send(frame) {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(frame));
-      }
-    }
-
-    function sendConnect() {
-      const PROTOCOL_VERSION = 3;
-
-      console.log('Sending connect request');
-
-      send({
-        type: 'req',
-        method: 'connect',
-        id: nextId(),
-        params: {
-          minProtocol: PROTOCOL_VERSION,
-          maxProtocol: PROTOCOL_VERSION,
-          client: {
-            id: 'aclient-web',
-            displayName: 'AClaw WebChat',
-            version: '1.0.0',
-            platform: 'web',
-            mode: 'webchat',
-          },
-          caps: [],
-          role: 'operator',
-          scopes: ['operator.read', 'operator.write'],
-        },
-      });
-    }
-
-    function sendMessage(text) {
-      const id = nextId();
-
-      console.log('Sending message:', text, 'session:', sessionKey);
-
-      send({
-        type: 'req',
-        method: 'chat.send',
-        id,
-        params: {
-          sessionKey: sessionKey,
-          message: text,
-          idempotencyKey: generateIdempotencyKey(),
-        },
-      });
-    }
-
-    function handleMessage(msg) {
-      console.log('Message:', msg);
-
-      // Connection established
-      if (msg.type === 'res' && msg.ok) {
-        // Check for sessionKey in response
-        const newSessionKey = msg.payload?.sessionKey || msg.result?.sessionKey;
-        if (newSessionKey && newSessionKey !== sessionKey) {
-          console.log('🔑 Session updated:', sessionKey, '→', newSessionKey);
-          sessionKey = newSessionKey;
-        }
-        console.log('Session ready');
-        return;
-      }
-
-      // Agent events - filter by our session
-      if (msg.event === 'agent' || msg.event === 'chat') {
-        const payload = msg.payload;
-
-        // Show messages for all sessions (remove filtering)
-        console.log('Agent/Chat event:', payload.stream, payload.sessionKey);
-
-        // Handle assistant stream
-        if (payload.stream === 'assistant') {
-          const runId = payload.runId;
-          const text = payload.data?.text || payload.data?.delta;
-
-          // Skip duplicate by runId
-          if (runId === lastRunId) {
-            console.log('Skipping duplicate:', runId);
-            return;
-          }
-          lastRunId = runId;
-
-          console.log('Assistant text:', text);
-          if (text) {
-            showTyping(false);
-            addMessage(text, 'agent');
-          }
-        }
-
-        // Show typing indicator
-        if (payload.stream === 'lifecycle' && payload.data?.phase === 'start') {
-          showTyping(true);
-        }
-
-        // Clear when done
-        if (payload.stream === 'lifecycle' && payload.data?.phase === 'end') {
-          showTyping(false);
-        }
-      }
-    }
-
     // Event Listeners
     sendBtn.addEventListener('click', () => {
       const text = messageInput.value.trim();
@@ -515,13 +332,8 @@
     });
 
     messageInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        sendBtn.click();
-      }
+      if (e.key === 'Enter') sendBtn.click();
     });
-
-    // Don't auto-connect - wait for login
-    // connect();
   </script>
 </body>
 </html>

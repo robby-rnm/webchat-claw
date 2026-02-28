@@ -1,197 +1,168 @@
-# AClient
+# AClaw WebSocket Proxy
 
-Example client applications for connecting to **OpenClaw Gateway**.
+WebSocket proxy untuk OpenClaw Gateway dengan authentication.
 
-This demonstrates how to build custom chat applications that connect to OpenClaw, allowing users to communicate with AI agents through your own interface.
+## Requirements
 
-## Quick Start
+- Node.js 18+
+- PostgreSQL (untuk user authentication)
+- OpenClaw Gateway running di port 18789
+
+## Environment Variables
+
+Copy `.env.example` ke `.env` dan sesuaikan:
 
 ```bash
-# Install dependencies
-cd /home/robby/Code/AClaw
-npm install
+# Server
+PORT=8084
+HOST=0.0.0.0
 
-# Copy and configure environment
-cp .env.example .env
-# Edit .env with your OpenClaw URL and API key
+# PostgreSQL
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=1
+DB_NAME=aclaw
+
+# OpenClaw Gateway
+GATEWAY_WS=ws://127.0.0.1:18789/gateway/v1/ws
+
+# ⚠️ PENTING: Get API_KEY dari Gateway
+# Jalankan: openclaw config get apiKey
+# Atau lihat di ~/.openclaw/config.json
+GATEWAY_TOKEN=<YOUR_API_KEY>
+
+# Proxy Authentication
+PROXY_TOKEN=change-me-in-production
+
+# Client Settings
+CLIENT_ID=openclaw-control-ui
+CLIENT_NAME=AClaw WebChat
+CLIENT_VERSION=1.0.0
+CLIENT_PLATFORM=web
+CLIENT_MODE=ui
 ```
 
----
+### Cara Mendapatkan GATEWAY_TOKEN
 
-## Web Version (Recommended)
+```bash
+# Method 1: Dari config
+openclaw config get apiKey
 
-The easiest way to chat with your agent via a web browser.
+# Method 2: Dari config JSON
+cat ~/.openclaw/config.json | grep apiKey
+```
+
+## Setup Database
+
+```bash
+# Login ke PostgreSQL
+psql -U postgres
+
+# Buat database
+CREATE DATABASE aclaw;
+
+# Buat users table
+\c aclaw;
+
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+# Buat user test (password: admin123)
+INSERT INTO users (username, password) VALUES (
+  'admin',
+  '$2a$10$YourBcryptHashHere'
+);
+
+# Generate bcrypt hash untuk password:
+# Node.js: const bcrypt = require('bcryptjs'); 
+#          console.log(bcrypt.hashSync('admin123', 10));
+```
+
+## Menjalankan Proxy
+
+```bash
+cd /home/robby/Code/AClaw/api
+
+# Install dependencies (jika belum)
+npm install express ws pg bcryptjs dotenv
+
+# Jalankan
+node ws-proxy.js
+```
+
+## Web Server (Frontend)
 
 ```bash
 cd /home/robby/Code/AClaw/web
-npm start
+
+# Install dependencies
+npm install express
+
+# Jalankan
+node server.js
 ```
 
-Then open: **http://localhost:3000**
+## Frontend Configuration
 
-### Features:
-- Beautiful dark-themed chat UI
-- Real-time messaging via WebSocket
-- Typing indicators
-- Auto-reconnect
-- Messages filtered to your session only
+Edit `config.js`:
 
----
-
-## CLI Version
-
-### Interactive Mode
-```bash
-# Interactive chat
-npm run ws interactive
-
-# Type your message and press Enter
-# Type "exit" to quit
-```
-
-### One-shot Messages
-```bash
-# Send a message via HTTP
-npm run http send "Hello from my app!"
-
-# Send a message via WebSocket
-npm run ws send "Hello via WebSocket!"
-```
-
----
-
-## Architecture
-
-```
-┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
-│  Your App   │────▶│ OpenClaw        │────▶│   Agent     │
-│  (AClient)  │     │ Gateway         │     │  (AI/ML)    │
-└─────────────┘     └─────────────────┘     └─────────────┘
-      │                    │
-      │    HTTP/WebSocket  │
-      └────────────────────┘
-```
-
----
-
-## Two Connection Modes
-
-### 1. HTTP (`src/http-client.js`)
-- Simple request-response pattern
-- Good for: chatbots, integrations, simple use cases
-- One message = one HTTP request
-
-### 2. WebSocket (`src/ws-client.js`)
-- Real-time bidirectional communication
-- Good for: interactive chat apps, streaming responses
-- Persistent connection, instant responses
-
----
-
-## Configuration
-
-| Environment Variable | Description | Default |
-|---------------------|-------------|---------|
-| `OPENCLAW_URL` | Gateway URL | `http://localhost:3000` |
-| `OPENCLAW_API_KEY` | Authentication key | (required) |
-| `SESSION_LABEL` | Session identifier | `my-app-client` |
-
-### Getting an API Key
-
-From OpenClaw status output, look for:
-- **Auth token** (e.g., `robby-ThinkPad-X260`)
-
-Or run:
-```bash
-openclaw status
-```
-
----
-
-## Available Methods
-
-### HTTP Client
 ```javascript
-import { HttpClient } from './src/http-client.js';
-
-// Send a message
-const response = await sendMessage("Hello!");
-
-// List sessions
-const sessions = await listSessions();
-
-// Get session history
-const history = await getSessionHistory(sessionKey);
+const CONFIG = {
+  wsUrl: 'ws://192.168.99.211:8084/',
+  proxyToken: 'change-me-in-production',
+};
 ```
 
-### WebSocket Client
-```javascript
-import { AClientWebSocket } from './src/ws-client.js';
+## Akses
 
-const client = new AClientWebSocket({
-  url: 'http://localhost:18789',
-  apiKey: 'f05a64a1178741eab1209d285d207f830a883bd2322f6914',
-  sessionLabel: 'my-session'
-});
+- **Web UI**: http://192.168.99.211:3000
+- **WebSocket Proxy**: ws://192.168.99.211:8084/
 
-await client.connect();
+## Authentication
 
-// Listen for agent responses
-client.onMessage((msg) => {
-  console.log('Agent:', msg.content?.text);
-});
-
-// Send a message
-await client.send('Hello, agent!');
+### Method 1: Token Auth
+```
+ws://192.168.99.211:8084/?token=change-me-in-production
 ```
 
----
-
-## Examples
-
-### Build a simple CLI chat
-```bash
-npm run ws interactive
+### Method 2: Login (Username/Password)
+```
+ws://192.168.99.211:8084/?user=admin&pass=admin123
 ```
 
-### Integrate with your existing backend
-```javascript
-// In your Express/Next.js app
-app.post('/chat', async (req, res) => {
-  const { message } = req.body;
-  const client = new AClientWebSocket({ apiKey: process.env.OPENCLAW_KEY });
-  
-  await client.connect();
-  const response = await client.send(message);
-  
-  res.json(response);
-});
+## Troubleshooting
+
+### "device identity required"
+Gateway wymengharpws device authentication. Ini kompleks - butuh publicKey + signature.
+
+Solusi: Pakai cara lain untuk connect atau skip device auth di Gateway config.
+
+### Login timeout
+- Cek PostgreSQL connection
+- Cek user credentials
+- Cek proxy logs: `curl http://localhost:8084/health`
+
+### Gateway disconnected
+- Cek Gateway sedang running: `openclaw gateway status`
+- Cek API_KEY benar
+
+## Files
+
 ```
-
----
-
-## Project Structure
-
-```
-/home/robby/Code/AClaw/
-├── web/                    # Web UI version
-│   ├── index.html         # Chat interface
-│   ├── server.js          # Express server
+AClaw/
+├── api/
+│   ├── ws-proxy.js      # WebSocket Proxy
+│   ├── server.js        # API Server (optional)
+│   ├── .env.example     # Environment template
 │   └── package.json
-├── src/                   # CLI client library
-│   ├── index.js           # Main exports
-│   ├── http-client.js     # HTTP client
-│   └── ws-client.js       # WebSocket client
-├── package.json
-├── README.md
-└── .env.example
+└── web/
+    ├── index.html       # Chat UI
+    ├── config.js        # Frontend config
+    ├── server.js        # Web Server
+    └── .env.example
 ```
-
----
-
-## License
-
-MIT
-# webchat-claw
-# webchat-claw
-# webchat-claw
