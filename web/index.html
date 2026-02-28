@@ -597,7 +597,7 @@
       formData.append('file', file);
       
       try {
-        const response = await fetch(`${CONFIG.apiUrl}/upload`, {
+        const response = await fetch(`${CONFIG.apiUrl}/api/upload`, {
           method: 'POST',
           body: formData
         });
