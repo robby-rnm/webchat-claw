@@ -33,6 +33,45 @@ const activeConnections = new Map();
 function generateRequestId() {
   return `req_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 }
+// ============================================
+// PRIORITY 1 SECURITY FUNCTIONS
+// ============================================
+
+// Input Sanitization (Prompt Injection Prevention)
+function sanitizeInput(text) {
+  if (!text) return text;
+  // Strip common prompt injection patterns
+  return text
+    .replace(/^(system|assistant|user|ignore|disregard)[:\s]/gi, '')
+    .replace(/ignore\s+(all\s+)?(previous\s+)?instructions/gi, '')
+    .replace(/you\s+are\s+(now\s+)?/gi, '')
+    .replace(/<\|/g, '')  // Remove LLM special tokens
+    .replace(/\|>/g, '')
+    .trim();
+}
+
+// XSS Prevention (Output Encoding)
+function escapeHtml(text) {
+  const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+// Rate Limiting
+const rateLimits = new Map();
+function checkRateLimit(clientId, maxRequests = 10, windowMs = 60000) {
+  const now = Date.now();
+  const key = clientId;
+  if (!rateLimits.has(key)) rateLimits.set(key, []);
+  const requests = rateLimits.get(key).filter(t => now - t < windowMs);
+  if (requests.length >= maxRequests) return false;
+  requests.push(now);
+  rateLimits.set(key, requests);
+  return true;
+}
+
+// ============================================
+
+
 
 // Login function - verify username/password against PostgreSQL
 async function verifyLogin(username, password) {
@@ -235,6 +274,13 @@ wss.on('connection', async (ws, req) => {
     return;
   }
   
+  // Rate limiting check
+  if (!checkRateLimit(clientId)) {
+    console.log(`[${clientId}] Rate limit exceeded`);
+    ws.close(4003, 'Rate limit exceeded');
+    return;
+  }
+  
   console.log(`[${clientId}] Auth OK, connecting to Gateway...`);
   
   // Connect to Gateway with username for unique session
@@ -298,6 +344,15 @@ wss.on('connection', async (ws, req) => {
             msg.id = generateRequestId();
           }
           
+          // Input sanitization: sanitize string params to prevent prompt injection
+          if (msg.params) {
+            for (const [key, value] of Object.entries(msg.params)) {
+              if (typeof value === 'string') {
+                msg.params[key] = sanitizeInput(value);
+              }
+            }
+          }
+          
           gatewayWs.send(JSON.stringify(msg));
         } catch (e) {
           console.error(`[${clientId}] Forward error:`, e);
@@ -340,7 +395,18 @@ wss.on('connection', async (ws, req) => {
           }
           
           // Forward only messages for this session
-          ws.send(data);
+          // XSS prevention: escape HTML in message content before sending to client
+          if (msg.payload?.content) {
+            if (typeof msg.payload.content === 'string') {
+              msg.payload.content = escapeHtml(msg.payload.content);
+            }
+          }
+          if (msg.result?.content) {
+            if (typeof msg.result.content === 'string') {
+              msg.result.content = escapeHtml(msg.result.content);
+            }
+          }
+          ws.send(JSON.stringify(msg));
         } catch (e) {
           console.error(`[${clientId}] Forward error (gateway→client):`, e);
         }
