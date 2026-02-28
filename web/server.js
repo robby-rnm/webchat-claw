@@ -11,6 +11,9 @@ const app = express();
 // Serve static files from current directory
 app.use(express.static(__dirname));
 
+// Serve uploaded files from uploads directory (symlinked to API uploads)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

@@ -31,6 +31,58 @@
     }
     .status.connected { background: #28a745; }
     .status.disconnected { background: #dc3545; }
+
+    .profile-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .profile-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e94560;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .profile-info { font-size: 0.85rem; }
+    .profile-name { font-weight: 500; }
+    .profile-status { font-size: 0.75rem; color: #888; }
+    .profile-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .profile-modal.active { display: flex; }
+    .profile-modal-content {
+      background: #16213e;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+    }
+    .profile-modal h2 { margin-bottom: 20px; }
+    .profile-field { margin-bottom: 15px; }
+    .profile-field label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 5px; }
+    .profile-field input, .profile-field textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #0f3460;
+      border-radius: 8px;
+      background: #1a1a2e;
+      color: #eee;
+      font-size: 1rem;
+    }
+    .profile-field textarea { resize: vertical; min-height: 80px; }
+    .profile-actions { display: flex; gap: 10px; margin-top: 20px; }
+
     .chat-container {
       flex: 1;
       overflow-y: auto;
@@ -48,14 +100,34 @@
     .message.user { align-self: flex-end; background: #0f3460; }
     .message.agent { align-self: flex-start; background: #16213e; }
     .message .sender { font-size: 0.75rem; color: #888; margin-bottom: 5px; }
+    .message .file-attachment {
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+    .message .file-attachment img {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .message .file-attachment a {
+      color: #e94560;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
     .input-container {
       background: #16213e;
       padding: 15px 20px;
       border-top: 1px solid #0f3460;
       display: flex;
       gap: 10px;
+      align-items: center;
     }
-    input {
+    input[type="text"] {
       flex: 1;
       padding: 12px 16px;
       border: 1px solid #0f3460;
@@ -65,8 +137,33 @@
       font-size: 1rem;
       outline: none;
     }
-    input:focus { border-color: #e94560; }
-    button {
+    input[type="text"]:focus { border-color: #e94560; }
+    .file-input-wrapper {
+      position: relative;
+    }
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      background: #0f3460;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: background 0.2s;
+    }
+    .icon-btn:hover { background: #1a4a7a; }
+    .icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.send-btn {
       padding: 12px 24px;
       background: #e94560;
       color: white;
@@ -76,8 +173,8 @@
       font-size: 1rem;
       transition: background 0.2s;
     }
-    button:hover { background: #c73e54; }
-    button:disabled { background: #555; cursor: not-allowed; }
+    button.send-btn:hover { background: #c73e54; }
+    button.send-btn:disabled { background: #555; cursor: not-allowed; }
     .typing { color: #888; font-style: italic; padding: 0 20px; font-size: 0.9rem; }
     .login-container {
       display: flex;
@@ -115,6 +212,63 @@
       font-size: 1rem;
     }
     .login-error { color: #e94560; text-align: center; margin-top: 15px; display: none; }
+    .message .seen { font-size: 0.7rem; color: #4da6ff; margin-top: 4px; }
+    .message .seen.by { color: #888; }
+    .upload-preview {
+      display: none;
+      padding: 10px;
+      background: #0f3460;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      align-items: center;
+      gap: 10px;
+    }
+    .upload-preview.show { display: flex; }
+    .upload-preview img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .upload-preview .filename {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+    .upload-preview .remove-btn {
+      background: none;
+      border: none;
+      color: #e94560;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+    #imageModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    #imageModal.show { display: flex; }
+    #imageModal img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 8px;
+    }
+    #imageModal .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -136,14 +290,129 @@
       <span id="status" class="status disconnected">Disconnected</span>
     </div>
     <div id="chat" class="chat-container"></div>
-    <div id="typing" class="typing" style="display: none;">Agent is typing...</div>
+    <div id="typing" class="typing" style="display: none;"><span id="typing-user"></span> is typing...</div>
     <div class="input-container">
+      <div class="file-input-wrapper">
+        <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt,.mp3,.mp4,.wav,.ogg" onchange="handleFileSelect(event)">
+        <button type="button" class="icon-btn" title="Attach file">📎</button>
+      </div>
       <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
-      <button id="sendBtn">Send</button>
+      <button id="sendBtn" class="send-btn">Send</button>
+    </div>
+    <div id="uploadPreview" class="upload-preview">
+      <img id="previewImg" src="" alt="Preview">
+      <span id="previewFilename" class="filename"></span>
+      <button type="button" class="remove-btn" onclick="clearFile()">×</button>
     </div>
   </div>
 
-  <script src="config.js"></script>
+  <!-- Image Modal -->
+  <div id="imageModal" onclick="closeImageModal()">
+    <button class="close-btn">×</button>
+    <img id="modalImg" src="" alt="Full size image">
+  </div>
+
+  <script src="config.js">
+    // ============ Profile Functions ============
+    async function loadUserProfile(userId) {
+      try {
+        const response = await fetch(`${CONFIG.apiUrl}/api/users/${userId}`);
+        const data = await response.json();
+        if (data.user) {
+          currentUser = data.user;
+          updateProfileUI();
+        }
+      } catch (e) {
+        console.error('Failed to load profile:', e);
+      }
+    }
+
+    function updateProfileUI() {
+      if (!currentUser) return;
+      
+      const displayName = currentUser.display_name || currentUser.username;
+      const initial = displayName.charAt(0).toUpperCase();
+      
+      // Update header profile section
+      let profileEl = document.getElementById('header-profile');
+      if (!profileEl) {
+        const header = document.querySelector('.header');
+        profileEl = document.createElement('div');
+        profileEl.id = 'header-profile';
+        profileEl.className = 'profile-section';
+        profileEl.onclick = openProfileModal;
+        header.appendChild(profileEl);
+      }
+      
+      profileEl.innerHTML = `
+        <div class="profile-avatar">${initial}</div>
+        <div class="profile-info">
+          <div class="profile-name">${escapeHtml(displayName)}</div>
+          <div class="profile-status">${getStatusEmoji(currentUser.status)} ${currentUser.status || 'offline'}</div>
+        </div>
+      `;
+      
+      // Update modal fields
+      document.getElementById('profile-display-name').value = currentUser.display_name || '';
+      document.getElementById('profile-avatar-url').value = currentUser.avatar_url || '';
+      document.getElementById('profile-bio').value = currentUser.bio || '';
+      document.getElementById('profile-status').value = currentUser.status || 'offline';
+    }
+
+    function getStatusEmoji(status) {
+      const emojis = { online: '🟢', away: '🟡', busy: '🔴', offline: '⚫' };
+      return emojis[status] || '⚫';
+    }
+
+    function openProfileModal() {
+      document.getElementById('profile-modal').classList.add('active');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile-modal').classList.remove('active');
+    }
+
+    async function saveProfile() {
+      if (!currentUserId) return;
+      
+      const display_name = document.getElementById('profile-display-name').value;
+      const avatar_url = document.getElementById('profile-avatar-url').value;
+      const bio = document.getElementById('profile-bio').value;
+      const status = document.getElementById('profile-status').value;
+      
+      try {
+        const response = await fetch(`${CONFIG.apiUrl}/api/users/${currentUserId}?userId=${currentUserId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ display_name, avatar_url, bio, status })
+        });
+        
+        const data = await response.json();
+        if (data.user) {
+          currentUser = data.user;
+          updateProfileUI();
+          closeProfileModal();
+        } else {
+          alert('Failed to save profile');
+        }
+      } catch (e) {
+        console.error('Failed to save profile:', e);
+        alert('Failed to save profile');
+      }
+    }
+
+    async function fetchUserIdByUsername(username) {
+      try {
+        const response = await fetch(`${CONFIG.apiUrl}/api/users/username/${username}`);
+        const data = await response.json();
+        return data.user ? data.user.id : null;
+      } catch (e) {
+        console.error('Failed to get user ID:', e);
+        return null;
+      }
+    }
+
+  </script>
   <script>
     // State
     let ws = null;
@@ -152,6 +421,11 @@
     let requestId = 0;
     let isConnected = false;
     let isLoggedIn = false;
+    let currentUser = null;
+    let currentUserId = null;
+    let lastMessageId = null;
+    let currentUsername = null;
+    let selectedFile = null;
 
     // DOM Elements
     const loginScreen = document.getElementById('login-screen');
@@ -161,6 +435,10 @@
     const sendBtn = document.getElementById('sendBtn');
     const statusEl = document.getElementById('status');
     const typingEl = document.getElementById('typing');
+    const fileInput = document.getElementById('fileInput');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const previewImg = document.getElementById('previewImg');
+    const previewFilename = document.getElementById('previewFilename');
 
     // ============ Login ============
     async function doLogin() {
@@ -174,6 +452,9 @@
         return;
       }
 
+      // Store username for profile loading
+      window.loginUsername = username;
+      
       const wsUrl = `${CONFIG.wsUrl}?user=${encodeURIComponent(username)}&pass=${encodeURIComponent(password)}`;
       ws = new WebSocket(wsUrl);
 
@@ -202,6 +483,7 @@
 
     function handleLoginResponse(msg) {
       if (msg.type === 'res' && msg.ok) {
+        currentUsername = document.getElementById('login-username').value;
         isLoggedIn = true;
         loginScreen.style.display = 'none';
         chatScreen.style.display = 'flex';
@@ -263,17 +545,72 @@
       }
     }
 
-    function sendMessage(text) {
+    function sendMessage(text, fileAttachment = null) {
+      let messageText = text;
+      if (fileAttachment) {
+        messageText = text ? `${text}\n\n[File: ${fileAttachment.originalName}](${fileAttachment.url})` : `[File: ${fileAttachment.originalName}](${fileAttachment.url})`;
+      }
+      
       send({
         type: 'req',
         method: 'chat.send',
         id: `req_${++requestId}_${Date.now()}`,
         params: {
           sessionKey,
-          message: text,
+          message: messageText,
           idempotencyKey: `idem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         },
       });
+    }
+
+    // ============ File Upload ============
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      selectedFile = file;
+      
+      // Show preview
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImg.src = e.target.result;
+          previewImg.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        previewImg.style.display = 'none';
+      }
+      
+      previewFilename.textContent = file.name;
+      uploadPreview.classList.add('show');
+    }
+
+    function clearFile() {
+      selectedFile = null;
+      fileInput.value = '';
+      uploadPreview.classList.remove('show');
+    }
+
+    async function uploadFile(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      try {
+        const response = await fetch(`${CONFIG.apiUrl}/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+        
+        return await response.json();
+      } catch (err) {
+        console.error('Upload error:', err);
+        throw err;
+      }
     }
 
     // ============ Message Handling ============
@@ -286,6 +623,25 @@
         return;
       }
 
+      // Handle typing events from other users
+      if (msg.event === 'typing' && msg.payload) {
+        const isTyping = msg.payload.isTyping;
+        const typingUser = msg.payload.username;
+        console.log('Typing event:', typingUser, isTyping);
+        
+        // Show typing indicator for other users
+        if (typingUser && typingUser !== currentUsername) {
+          showTyping(isTyping, typingUser);
+        }
+        return;
+      }
+      
+      // Read receipt updates
+      if (msg.event === 'read:update' && msg.payload) {
+        updateSeenIndicator(msg.payload.messageId, msg.payload.reader);
+        return;
+      }
+      
       // Agent/Chat events
       if (msg.event === 'agent' || msg.event === 'chat') {
         const p = msg.payload;
@@ -294,27 +650,81 @@
         if (p.stream === 'assistant') {
           const runId = p.runId;
           const text = p.data?.text || p.data?.delta;
+          // Get message ID from various possible locations
+          const msgId = p.id || msg.id || msg.payload?.id || p.runId;
           if (runId !== lastRunId && text) {
             lastRunId = runId;
             showTyping(false);
-            addMessage(text, 'agent');
+            addMessage(text, 'agent', null, msgId);
           }
         }
 
         // Typing indicator
         if (p.stream === 'lifecycle') {
-          showTyping(p.data?.phase === 'start');
+          showTyping(p.data?.phase === 'start', 'agent');
         }
       }
     }
 
     // ============ UI Functions ============
-    function addMessage(text, sender) {
+    function addMessage(text, sender, fileAttachment = null, messageId = null) {
       const div = document.createElement('div');
       div.className = `message ${sender}`;
-      div.innerHTML = `<div class="sender">${sender === 'user' ? 'You' : '🐲 Acong'}</div>${text}`;
+      if (messageId) {
+        div.dataset.messageId = messageId;
+      }
+      
+      let content = `<div class="sender">${sender === 'user' ? 'You' : '🐲 Acong'}</div>${text}`;
+      
+      if (fileAttachment) {
+        if (fileAttachment.isImage) {
+          content += `<div class="file-attachment"><img src="${fileAttachment.url}" alt="${fileAttachment.originalName}" onclick="showImage('${fileAttachment.url}')"></div>`;
+        } else {
+          content += `<div class="file-attachment"><a href="${fileAttachment.url}" target="_blank">📄 ${fileAttachment.originalName}</a></div>`;
+        }
+      }
+      
+      // Add seen indicator placeholder (for agent messages)
+      if (sender === 'agent') {
+        content += '<div class="seen" style="display:none;">✓ Seen</div>';
+      }
+      
+      div.innerHTML = content;
       chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
+      
+      // Track last message ID for read receipts
+      if (messageId) {
+        lastMessageId = messageId;
+        // Mark as read after a short delay
+        setTimeout(() => sendReadReceipt(messageId), 1000);
+      }
+    }
+    
+    // Send read receipt to server
+    function sendReadReceipt(messageId) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({
+        type: 'req',
+        method: 'read',
+        id: 'read_' + Date.now(),
+        params: { messageId }
+      }));
+    }
+    
+    // Update seen indicator
+    function updateSeenIndicator(messageId, reader) {
+      const msgs = document.querySelectorAll('.message.agent');
+      for (const msg of msgs) {
+        if (msg.dataset.messageId == messageId) {
+          const seenEl = msg.querySelector('.seen');
+          if (seenEl) {
+            seenEl.style.display = 'block';
+            seenEl.innerHTML = `✓ Seen by <span class="by">${reader}</span>`;
+          }
+          break;
+        }
+      }
     }
 
     function setStatus(connected) {
@@ -324,23 +734,215 @@
       sendBtn.disabled = !connected;
     }
 
-    function showTyping(show) {
+    function showTyping(show, username = null) {
+      if (show && username) {
+        document.getElementById("typing-user").textContent = username === "agent" ? "Agent" : username;
+      }
       typingEl.style.display = show ? 'block' : 'none';
     }
 
+    function showImage(url) {
+      document.getElementById('modalImg').src = url;
+      document.getElementById('imageModal').classList.add('show');
+    }
+
+    function closeImageModal() {
+      document.getElementById('imageModal').classList.remove('show');
+    }
+
     // Event Listeners
-    sendBtn.addEventListener('click', () => {
+    sendBtn.addEventListener('click', async () => {
       const text = messageInput.value.trim();
-      if (text) {
-        addMessage(text, 'user');
-        messageInput.value = '';
-        sendMessage(text);
+      
+      if (!text && !selectedFile) return;
+      
+      // Upload file first if selected
+      let fileAttachment = null;
+      if (selectedFile) {
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Uploading...';
+        
+        try {
+          const result = await uploadFile(selectedFile);
+          fileAttachment = result.file;
+        } catch (err) {
+          alert('File upload failed. Please try again.');
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Send';
+          return;
+        }
+      }
+      
+      // Add message to chat
+      addMessage(text || (fileAttachment ? `Sent file: ${fileAttachment.originalName}` : ''), 'user', fileAttachment);
+      
+      // Send to agent
+      sendMessage(text, fileAttachment);
+      
+      // Clear input and file
+      messageInput.value = '';
+      clearFile();
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send';
+    });
+
+    let typingTimeout = null;
+    messageInput.addEventListener('input', () => {
+      // Send typing event when user types
+      if (ws && ws.readyState === WebSocket.OPEN && sessionKey) {
+        send({
+          type: 'req',
+          method: 'typing',
+          params: {
+            sessionKey,
+            isTyping: true,
+          },
+        });
+        
+        // Debounce - clear previous timeout
+        if (typingTimeout) clearTimeout(typingTimeout);
+        
+        // Auto-clear typing after 3 seconds (will be overridden by next keystroke)
+        typingTimeout = setTimeout(() => {
+          if (ws && ws.readyState === WebSocket.OPEN && sessionKey) {
+            send({
+              type: 'req',
+              method: 'typing',
+              params: {
+                sessionKey,
+                isTyping: false,
+              },
+            });
+          }
+        }, 3000);
+      }
+    });
+    
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        // Clear typing when sending message
+        if (typingTimeout) {
+          clearTimeout(typingTimeout);
+          typingTimeout = null;
+        }
+        if (ws && ws.readyState === WebSocket.OPEN && sessionKey) {
+          send({
+            type: 'req',
+            method: 'typing',
+            params: {
+              sessionKey,
+              isTyping: false,
+            },
+          });
+        }
+        sendBtn.click();
       }
     });
 
-    messageInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendBtn.click();
-    });
+    // Update config to include API URL if not present
+    if (!CONFIG.apiUrl) {
+      CONFIG.apiUrl = 'http://localhost:3001';
+    }
+  
+    // ============ Profile Functions ============
+    async function loadUserProfile(userId) {
+      try {
+        const response = await fetch(`${CONFIG.apiUrl}/api/users/${userId}`);
+        const data = await response.json();
+        if (data.user) {
+          currentUser = data.user;
+          updateProfileUI();
+        }
+      } catch (e) {
+        console.error('Failed to load profile:', e);
+      }
+    }
+
+    function updateProfileUI() {
+      if (!currentUser) return;
+      
+      const displayName = currentUser.display_name || currentUser.username;
+      const initial = displayName.charAt(0).toUpperCase();
+      
+      // Update header profile section
+      let profileEl = document.getElementById('header-profile');
+      if (!profileEl) {
+        const header = document.querySelector('.header');
+        profileEl = document.createElement('div');
+        profileEl.id = 'header-profile';
+        profileEl.className = 'profile-section';
+        profileEl.onclick = openProfileModal;
+        header.appendChild(profileEl);
+      }
+      
+      profileEl.innerHTML = `
+        <div class="profile-avatar">${initial}</div>
+        <div class="profile-info">
+          <div class="profile-name">${escapeHtml(displayName)}</div>
+          <div class="profile-status">${getStatusEmoji(currentUser.status)} ${currentUser.status || 'offline'}</div>
+        </div>
+      `;
+      
+      // Update modal fields
+      document.getElementById('profile-display-name').value = currentUser.display_name || '';
+      document.getElementById('profile-avatar-url').value = currentUser.avatar_url || '';
+      document.getElementById('profile-bio').value = currentUser.bio || '';
+      document.getElementById('profile-status').value = currentUser.status || 'offline';
+    }
+
+    function getStatusEmoji(status) {
+      const emojis = { online: '🟢', away: '🟡', busy: '🔴', offline: '⚫' };
+      return emojis[status] || '⚫';
+    }
+
+    function openProfileModal() {
+      document.getElementById('profile-modal').classList.add('active');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile-modal').classList.remove('active');
+    }
+
+    async function saveProfile() {
+      if (!currentUserId) return;
+      
+      const display_name = document.getElementById('profile-display-name').value;
+      const avatar_url = document.getElementById('profile-avatar-url').value;
+      const bio = document.getElementById('profile-bio').value;
+      const status = document.getElementById('profile-status').value;
+      
+      try {
+        const response = await fetch(`${CONFIG.apiUrl}/api/users/${currentUserId}?userId=${currentUserId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ display_name, avatar_url, bio, status })
+        });
+        
+        const data = await response.json();
+        if (data.user) {
+          currentUser = data.user;
+          updateProfileUI();
+          closeProfileModal();
+        } else {
+          alert('Failed to save profile');
+        }
+      } catch (e) {
+        console.error('Failed to save profile:', e);
+        alert('Failed to save profile');
+      }
+    }
+
+    async function fetchUserIdByUsername(username) {
+      try {
+        const response = await fetch(`${CONFIG.apiUrl}/api/users/username/${username}`);
+        const data = await response.json();
+        return data.user ? data.user.id : null;
+      } catch (e) {
+        console.error('Failed to get user ID:', e);
+        return null;
+      }
+    }
+
   </script>
 </body>
 </html>

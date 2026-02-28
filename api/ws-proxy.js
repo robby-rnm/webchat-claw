@@ -1,5 +1,6 @@
 import os from 'os';
 import express from 'express';
+import multer from 'multer';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createServer } from 'http';
 import crypto from 'crypto';
@@ -22,6 +23,9 @@ const pool = new Pool({
 const app = express();
 app.use(express.json());
 
+// Multer configuration for file uploads
+const upload = multer({ dest: './uploads/' });
+
 // CORS support
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -41,6 +45,12 @@ const ADMIN_KEY = process.env.ADMIN_KEY || 'admin_secret';
 
 // In-memory store for active proxy connections
 const activeConnections = new Map();
+
+// Session-to-clients mapping for broadcasting
+const sessionClients = new Map();
+
+// Typing timeouts for auto-clearing typing status
+const typingTimeouts = new Map();
 
 function generateRequestId() {
   return `req_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
@@ -485,6 +495,21 @@ async function getUserId(username) {
   }
 }
 
+
+// File upload endpoint
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  res.json({
+    success: true,
+    filename: req.file.filename,
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size,
+    path: req.file.path
+  });
+});
 // Get messages for a session
 app.get('/api/messages', async (req, res) => {
   const { session, limit = 50 } = req.query;

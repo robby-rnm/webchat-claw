@@ -1,8 +1,45 @@
 import express from 'express';
 import { WebSocket } from 'ws';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
+
+// Configure multer for file uploads
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    // Allow images and common file types
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|mp3|mp4|wav|ogg/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype) || file.mimetype.startsWith('image/') || file.mimetype.startsWith('application/');
+    if (extname || mimetype) {
+      return cb(null, true);
+    }
+    cb(new Error('File type not allowed'));
+  }
+});
 
 const PORT = process.env.PORT || 3001;
 const GATEWAY_URL = process.env.GATEWAY_URL || 'ws://127.0.0.1:18789/gateway/v1/ws';
@@ -158,6 +195,42 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// File upload endpoint
+app.post('/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  
+  const fileUrl = `/uploads/${req.file.filename}`;
+  const isImage = req.file.mimetype.startsWith('image/');
+  
+  res.json({
+    success: true,
+    file: {
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      url: fileUrl,
+      isImage: isImage
+    }
+  });
+});
+
+// Upload error handler
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large. Max 10MB allowed.' });
+    }
+    return res.status(400).json({ error: err.message });
+  }
+  if (err) {
+    return res.status(400).json({ error: err.message });
+  }
+  next();
+});
+
 // Send chat message
 app.post('/chat', async (req, res) => {
   const { message, sessionLabel } = req.body;
@@ -199,6 +272,7 @@ app.listen(PORT, '0.0.0.0', () => {
    
    Endpoints:
    POST /chat    - Send a message
+   POST /upload  - Upload a file
    GET  /health  - Health check
   `);
 });

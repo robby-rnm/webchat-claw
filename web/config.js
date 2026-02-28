@@ -7,4 +7,7 @@ const CONFIG = {
   
   // Proxy token (for token-based auth)
   proxyToken: 'change-me-in-production',
+  
+  // API Server URL (for file uploads)
+  apiUrl: 'http://192.168.99.211:8084',
 };
