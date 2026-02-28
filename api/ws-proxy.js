@@ -22,6 +22,7 @@ const pool = new Pool({
 
 const app = express();
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 // Multer configuration for file uploads
 const upload = multer({ dest: './uploads/' });
