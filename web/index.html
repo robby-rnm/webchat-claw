@@ -179,6 +179,13 @@
 
       ws.onmessage = (event) => handleData(event.data, handleLoginResponse);
 
+      ws.onclose = (event) => {
+        if (!isLoggedIn) {
+          errorEl.textContent = "Login failed. Please check your credentials.";
+          errorEl.style.display = "block";
+        }
+      };
+
       ws.onerror = () => {
         errorEl.textContent = 'Connection error';
         errorEl.style.display = 'block';
@@ -186,7 +193,7 @@
 
       setTimeout(() => {
         if (!isLoggedIn) {
-          errorEl.textContent = 'Login timeout';
+          errorEl.textContent = 'Login failed. Please check your credentials.';
           errorEl.style.display = 'block';
           if (ws) ws.close();
         }

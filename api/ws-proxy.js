@@ -22,10 +22,22 @@ const pool = new Pool({
 const app = express();
 app.use(express.json());
 
+// CORS support
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, X-Admin-Key");
+  res.header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 const PORT = process.env.PORT || 8084;
 const GATEWAY_WS = process.env.GATEWAY_WS || 'ws://127.0.0.1:18789/gateway/v1/ws';
 const PROXY_TOKEN = process.env.PROXY_TOKEN || 'change-me-in-production';
 const API_KEY = process.env.API_KEY || 'f05a64a1178741eab1209d285d207f830a883bd2322f6914';
+const ADMIN_KEY = process.env.ADMIN_KEY || 'admin_secret';
 
 // In-memory store for active proxy connections
 const activeConnections = new Map();
@@ -337,6 +349,12 @@ wss.on('connection', async (ws, req) => {
             if (msg.method === 'chat.send' && !msg.params.idempotencyKey) {
               msg.params.idempotencyKey = 'idem_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             }
+            // Save message to database (fire and forget)
+            if (msg.method === 'chat.send' && msg.params.content) {
+              getUserId(clientUsername).then(userId => {
+                saveMessage(userId, clientUsername || 'anonymous', msg.params.content, sessionKey);
+              });
+            }
           }
           
           // Add request ID if missing
@@ -444,12 +462,131 @@ wss.on('connection', async (ws, req) => {
     });
 });
 
+// Save message to PostgreSQL
+async function saveMessage(userId, username, content, sessionKey) {
+  try {
+    await pool.query(
+      'INSERT INTO messages (user_id, username, content, session_key) VALUES ($1, $2, $3, $4)',
+      [userId, username, content, sessionKey]
+    );
+  } catch (e) {
+    console.error('Failed to save message:', e);
+  }
+}
+
+// Get user ID by username
+async function getUserId(username) {
+  try {
+    const result = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+    return result.rows.length > 0 ? result.rows[0].id : null;
+  } catch (e) {
+    console.error('Failed to get user ID:', e);
+    return null;
+  }
+}
+
+// Get messages for a session
+app.get('/api/messages', async (req, res) => {
+  const { session, limit = 50 } = req.query;
+  
+  if (!session) {
+    return res.status(400).json({ error: 'Missing session parameter' });
+  }
+  
+  try {
+    const result = await pool.query(
+      'SELECT id, user_id, username, content, session_key, created_at FROM messages WHERE session_key = $1 ORDER BY created_at DESC LIMIT $2',
+      [session, Math.min(limit, 100)]
+    );
+    res.json({ messages: result.rows.reverse() });
+  } catch (e) {
+    console.error('Failed to get messages:', e);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok',
     connections: activeConnections.size,
   });
+});
+
+
+// Admin middleware - check X-Admin-Key header
+function requireAdmin(req, res, next) {
+  const adminKey = req.headers['x-admin-key'];
+  if (!adminKey || adminKey !== ADMIN_KEY) {
+    return res.status(403).json({ error: 'Forbidden: Admin access required' });
+  }
+  next();
+}
+
+// POST /api/admin/users - Create new user (admin only)
+app.post('/api/admin/users', requireAdmin, async (req, res) => {
+  try {
+    const { username, password, role = 'user' } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
+    }
+    
+    // Check if user already exists
+    const existing = await pool.query(
+      'SELECT id FROM users WHERE username = $1',
+      [username]
+    );
+    
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
+    
+    // Hash password and create user
+    const hash = await bcrypt.hash(password, 10);
+    const isAdmin = role === 'admin';
+    
+    const result = await pool.query(
+      'INSERT INTO users (username, password, role, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, username, role, is_admin, created_at',
+      [username, hash, role, isAdmin]
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (e) {
+    console.error('Create user error:', e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/users - List all users (admin only)
+app.get('/api/admin/users', requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, username, role, is_admin, created_at FROM users ORDER BY id'
+    );
+    res.json({ users: result.rows });
+  } catch (e) {
+    console.error('List users error:', e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/admin/users/:id - Delete a user (admin only)
+app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query('SELECT username FROM users WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    res.json({ success: true, message: 'User deleted' });
+  } catch (e) {
+    console.error('Delete user error:', e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Get active connections info
