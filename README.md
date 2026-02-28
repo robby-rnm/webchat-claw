@@ -120,7 +120,8 @@ const CONFIG = {
 
 ## Akses
 
-- **Web UI**: http://192.168.99.211:3000
+- **Web UI (Chat)**: http://192.168.99.211:3000
+- **Admin Panel**: http://192.168.99.211:3000/admin.html
 - **WebSocket Proxy**: ws://192.168.99.211:8084/
 
 ## Authentication
@@ -166,3 +167,14 @@ AClaw/
     ├── server.js        # Web Server
     └── .env.example
 ```
+
+## Admin Panel
+
+**URL**: http://192.168.99.211:3000/admin.html
+
+**Login**: Gunakan admin key: `admin_secret`
+
+**Fitur**:
+- Lihat daftar user
+- Buat user baru
+- Hapus user
